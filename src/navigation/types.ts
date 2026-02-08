@@ -1,7 +1,3 @@
-/**
- * Navigation route param types for type-safe navigation.
- */
-
 export type RootStackParamList = {
   SearchMain: undefined;
   WatchlistMain: undefined;

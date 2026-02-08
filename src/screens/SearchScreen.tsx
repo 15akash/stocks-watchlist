@@ -14,6 +14,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSearchStocks } from '../hooks/useSearchStocks';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { ErrorRetry } from '../components/ErrorRetry';
+import { colors } from '../theme/colors';
+import { typography } from '../theme/typography';
 import type { SearchResult } from '../models/types';
 import type { RootStackParamList } from '../navigation/types';
 
@@ -49,7 +51,7 @@ export function SearchScreen() {
             {item.name}
           </Text>
           <Text style={styles.resultSymbol}>
-            {item.symbol} {item.exchangeShortName ? `· ${item.exchangeShortName}` : ''}
+            {item.symbol} {item.exchange ? `· ${item.exchange}` : ''}
           </Text>
         </View>
       </View>
@@ -73,7 +75,7 @@ export function SearchScreen() {
           <TextInput
             style={styles.input}
             placeholder="Search stocks, companies..."
-            placeholderTextColor="#a3a3a3"
+            placeholderTextColor={colors.textPlaceholder}
             value={query}
             onChangeText={setQuery}
             autoCapitalize="none"
@@ -90,7 +92,7 @@ export function SearchScreen() {
 
       {isLoading && (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#171717" />
+          <ActivityIndicator size="large" color={colors.textPrimary} />
           <Text style={styles.loadingText}>Searching...</Text>
         </View>
       )}
@@ -127,22 +129,22 @@ export function SearchScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: colors.white },
   searchContainer: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#d4d4d4',
+    borderColor: colors.borderMedium,
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 48,
-    backgroundColor: '#fafafa',
+    backgroundColor: colors.backgroundSubtle,
   },
   searchIcon: { fontSize: 16, marginRight: 8 },
-  input: { flex: 1, fontSize: 15, color: '#171717' },
+  input: typography.body,
   clearButton: { padding: 4 },
-  clearText: { fontSize: 16, color: '#a3a3a3' },
+  clearText: { fontSize: 16, color: colors.textPlaceholder },
   list: { paddingHorizontal: 16, paddingBottom: 20 },
   resultItem: {
     flexDirection: 'row',
@@ -150,36 +152,36 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f5f5f5',
+    borderBottomColor: colors.borderLight,
   },
   resultLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   avatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#525252',
+    backgroundColor: colors.textSecondary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
-  avatarText: { color: '#fff', fontSize: 11, fontWeight: '600' },
+  avatarText: typography.badgeSmall,
   resultInfo: { flex: 1 },
-  resultName: { fontSize: 15, color: '#171717', fontWeight: '500' },
-  resultSymbol: { fontSize: 13, color: '#737373', marginTop: 2 },
+  resultName: typography.bodyMedium,
+  resultSymbol: { ...typography.caption, marginTop: 2 },
   addButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#171717',
+    backgroundColor: colors.textPrimary,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 12,
   },
-  addedButton: { backgroundColor: '#e5e5e5' },
-  addButtonText: { color: '#fff', fontSize: 18, fontWeight: '600' },
-  addedButtonText: { color: '#525252' },
+  addedButton: { backgroundColor: colors.border },
+  addButtonText: { ...typography.headingMedium, color: colors.white },
+  addedButtonText: { color: colors.textSecondary },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
-  loadingText: { color: '#737373', marginTop: 12, fontSize: 14 },
-  emptyTitle: { fontSize: 17, color: '#171717', fontWeight: '600', marginBottom: 8 },
-  emptySubtitle: { fontSize: 14, color: '#a3a3a3', textAlign: 'center' },
+  loadingText: { ...typography.bodySmall, color: colors.textMuted, marginTop: 12 },
+  emptyTitle: { ...typography.headingSmall, marginBottom: 8 },
+  emptySubtitle: { ...typography.subtitle, textAlign: 'center' },
 });

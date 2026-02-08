@@ -67,45 +67,56 @@ export interface FMPSearchResult {
   symbol: string;
   name: string;
   currency: string;
-  exchangeShortName: string;
+  exchange: string;
 }
 
-export interface FMPQuote {
+export interface FMPProfile {
   symbol: string;
-  name: string;
+  companyName: string;
   price: number;
   change: number;
-  changesPercentage: number;
-  dayLow: number;
-  dayHigh: number;
-  yearLow: number;
-  yearHigh: number;
-  marketCap: number;
+  changePercentage: number;
   volume: number;
-  avgVolume: number;
-  open: number;
-  previousClose: number;
-  pe: number;
-  eps: number;
+  averageVolume: number;
+  marketCap: number;
+  range: string; // "96.43-160.27"
   exchange: string;
-  timestamp: number;
+  beta: number;
+  industry: string;
+  sector: string;
 }
 
 export const fmpClient = {
-  searchSymbol(query: string, limit = 10): Promise<FMPSearchResult[]> {
-    return request<FMPSearchResult[]>('/search-symbol', {
-      query,
-      limit: String(limit),
-    });
+  async searchSymbol(query: string, limit = 10): Promise<FMPSearchResult[]> {
+    // Search both by symbol and by name, then merge and deduplicate
+    const [bySymbol, byName] = await Promise.all([
+      request<FMPSearchResult[]>('/search-symbol', { query, limit: String(limit) }).catch(() => []),
+      request<FMPSearchResult[]>('/search-name', { query, limit: String(limit) }).catch(() => []),
+    ]);
+    const seen = new Set<string>();
+    const merged: FMPSearchResult[] = [];
+    for (const item of [...bySymbol, ...byName]) {
+      if (!seen.has(item.symbol)) {
+        seen.add(item.symbol);
+        merged.push(item);
+      }
+    }
+    return merged.slice(0, limit);
   },
 
-  getQuote(symbol: string): Promise<FMPQuote[]> {
-    return request<FMPQuote[]>('/quote', { symbol });
+  getProfile(symbol: string): Promise<FMPProfile[]> {
+    return request<FMPProfile[]>('/profile', { symbol });
   },
 
-  getBatchQuotes(symbols: string[]): Promise<FMPQuote[]> {
-    return request<FMPQuote[]>('/batch-quote', {
-      symbols: symbols.join(','),
-    });
+  async getBatchProfiles(symbols: string[]): Promise<FMPProfile[]> {
+    // No batch-profile endpoint on free tier, fetch individually
+    const results = symbols.map((s) =>
+      request<FMPProfile[]>('/profile', { symbol: s })
+        .then((arr) => arr[0] ?? null)
+        .catch(() => null),
+    );
+    return Promise.all(results).then(
+      (arr) => arr.filter((p): p is FMPProfile => p !== null),
+    );
   },
 };

@@ -5,6 +5,7 @@ import { Text } from 'react-native';
 import { SearchScreen } from '../screens/SearchScreen';
 import { WatchlistScreen } from '../screens/WatchlistScreen';
 import { StockDetailScreen } from '../screens/StockDetailScreen';
+import { colors } from '../theme/colors';
 import type { RootStackParamList, RootTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -54,11 +55,11 @@ export function AppNavigator() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#171717',
-        tabBarInactiveTintColor: '#a3a3a3',
+        tabBarActiveTintColor: colors.textPrimary,
+        tabBarInactiveTintColor: colors.textPlaceholder,
         tabBarStyle: {
-          borderTopColor: '#e5e5e5',
-          backgroundColor: '#fff',
+          borderTopColor: colors.border,
+          backgroundColor: colors.white,
         },
       }}
     >

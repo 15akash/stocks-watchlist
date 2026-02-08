@@ -13,6 +13,8 @@ import type { RouteProp } from '@react-navigation/native';
 import { useStockQuote } from '../hooks/useStockQuote';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { ErrorRetry } from '../components/ErrorRetry';
+import { colors } from '../theme/colors';
+import { typography } from '../theme/typography';
 import type { StockQuote } from '../models/types';
 import type { RootStackParamList } from '../navigation/types';
 
@@ -36,7 +38,6 @@ function formatVolume(value: number): string {
  * Computes a meaningful insight based on quote data.
  */
 function computeInsight(quote: StockQuote): { title: string; description: string } {
-  // 52-week range position
   const range = quote.yearHigh - quote.yearLow;
   if (range > 0) {
     const position = ((quote.price - quote.yearLow) / range) * 100;
@@ -55,7 +56,6 @@ function computeInsight(quote: StockQuote): { title: string; description: string
       };
     }
 
-    // Volume insight
     if (quote.avgVolume > 0) {
       const volumeRatio = quote.volume / quote.avgVolume;
       if (volumeRatio > 1.5) {
@@ -66,7 +66,6 @@ function computeInsight(quote: StockQuote): { title: string; description: string
       }
     }
 
-    // Default: range position
     return {
       title: '52-Week Range Position',
       description: `Currently at ${posLabel}% of its 52-week range ($${quote.yearLow.toFixed(2)} – $${quote.yearHigh.toFixed(2)}). Today's change: ${quote.change >= 0 ? '+' : ''}$${quote.change.toFixed(2)} (${quote.changesPercentage >= 0 ? '+' : ''}${quote.changesPercentage.toFixed(2)}%).`,
@@ -102,7 +101,7 @@ export function StockDetailScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#171717" />
+        <ActivityIndicator size="large" color={colors.textPrimary} />
         <Text style={styles.loadingText}>Loading quote...</Text>
       </View>
     );
@@ -163,15 +162,11 @@ export function StockDetailScreen() {
         <Text style={styles.sectionTitle}>Key Statistics</Text>
         <View style={styles.statsGrid}>
           <StatBox label="Market Cap" value={formatMarketCap(quote.marketCap)} />
-          <StatBox label="P/E Ratio" value={quote.pe != null ? quote.pe.toFixed(2) : 'N/A'} />
           <StatBox label="52W High" value={`$${quote.yearHigh.toFixed(2)}`} />
           <StatBox label="52W Low" value={`$${quote.yearLow.toFixed(2)}`} />
           <StatBox label="Volume" value={formatVolume(quote.volume)} />
           <StatBox label="Avg Volume" value={formatVolume(quote.avgVolume)} />
-          <StatBox label="Day High" value={`$${quote.dayHigh.toFixed(2)}`} />
-          <StatBox label="Day Low" value={`$${quote.dayLow.toFixed(2)}`} />
-          <StatBox label="Open" value={`$${quote.open.toFixed(2)}`} />
-          <StatBox label="Prev Close" value={`$${quote.previousClose.toFixed(2)}`} />
+          <StatBox label="Exchange" value={quote.exchange} />
         </View>
       </View>
 
@@ -197,74 +192,74 @@ function StatBox({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: colors.white },
   content: { paddingBottom: 40 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
-  loadingText: { color: '#737373', marginTop: 12 },
-  noDataText: { color: '#737373', fontSize: 15 },
+  loadingText: { ...typography.caption, marginTop: 12 },
+  noDataText: { ...typography.body, color: colors.textMuted },
   priceSection: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f5f5f5',
+    borderBottomColor: colors.borderLight,
   },
   priceHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
-  price: { fontSize: 32, fontWeight: '700', color: '#171717' },
+  price: typography.priceHero,
   changeRow: { flexDirection: 'row', gap: 6, marginTop: 4 },
-  changeText: { fontSize: 15, fontWeight: '500' },
-  positive: { color: '#16a34a' },
-  negative: { color: '#dc2626' },
+  changeText: { ...typography.bodyMedium, fontSize: 15 },
+  positive: { color: colors.positive },
+  negative: { color: colors.negative },
   symbolBadge: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#525252',
+    backgroundColor: colors.textSecondary,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  symbolBadgeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
-  companyName: { fontSize: 18, color: '#404040', marginTop: 8 },
-  exchange: { fontSize: 13, color: '#a3a3a3', marginTop: 4 },
+  symbolBadgeText: typography.badge,
+  companyName: { ...typography.headingMedium, color: colors.textTertiary, fontWeight: '400', marginTop: 8 },
+  exchange: { ...typography.caption, color: colors.textPlaceholder, marginTop: 4 },
   watchlistButton: {
     marginHorizontal: 16,
     marginTop: 16,
     paddingVertical: 12,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#171717',
+    borderColor: colors.textPrimary,
     alignItems: 'center',
   },
   watchlistButtonActive: {
-    backgroundColor: '#171717',
+    backgroundColor: colors.textPrimary,
   },
-  watchlistButtonText: { fontSize: 15, fontWeight: '600', color: '#171717' },
-  watchlistButtonTextActive: { color: '#fff' },
+  watchlistButtonText: { ...typography.button, color: colors.textPrimary },
+  watchlistButtonTextActive: { color: colors.white },
   section: { padding: 16 },
-  sectionTitle: { fontSize: 18, fontWeight: '600', color: '#171717', marginBottom: 12 },
+  sectionTitle: { ...typography.headingMedium, marginBottom: 12 },
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
   },
   statBox: {
-    backgroundColor: '#fafafa',
+    backgroundColor: colors.backgroundSubtle,
     padding: 12,
     borderRadius: 10,
     width: '48%',
     flexGrow: 1,
   },
-  statLabel: { fontSize: 12, color: '#737373', marginBottom: 4 },
-  statValue: { fontSize: 15, color: '#171717', fontWeight: '500' },
+  statLabel: { ...typography.label, marginBottom: 4 },
+  statValue: typography.bodyMedium,
   insightCard: {
-    backgroundColor: '#fafafa',
+    backgroundColor: colors.backgroundSubtle,
     padding: 16,
     borderRadius: 12,
     borderLeftWidth: 4,
-    borderLeftColor: '#171717',
+    borderLeftColor: colors.textPrimary,
   },
-  insightTitle: { fontSize: 15, fontWeight: '600', color: '#171717', marginBottom: 8 },
-  insightDescription: { fontSize: 14, color: '#525252', lineHeight: 20 },
+  insightTitle: { ...typography.bodyMedium, fontWeight: '600', marginBottom: 8 },
+  insightDescription: { ...typography.bodySmall, lineHeight: 20 },
 });

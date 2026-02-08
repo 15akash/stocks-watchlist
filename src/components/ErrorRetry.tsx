@@ -1,5 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { colors } from '../theme/colors';
+import { typography } from '../theme/typography';
 
 interface Props {
   message?: string;
@@ -19,12 +21,12 @@ export function ErrorRetry({ message = 'Something went wrong', onRetry }: Props)
 
 const styles = StyleSheet.create({
   container: { alignItems: 'center', padding: 32 },
-  message: { fontSize: 15, color: '#737373', marginBottom: 16, textAlign: 'center' },
+  message: { ...typography.body, color: colors.textMuted, marginBottom: 16, textAlign: 'center' },
   button: {
-    backgroundColor: '#171717',
+    backgroundColor: colors.textPrimary,
     paddingHorizontal: 24,
     paddingVertical: 10,
     borderRadius: 8,
   },
-  buttonText: { color: '#fff', fontWeight: '600', fontSize: 14 },
+  buttonText: typography.buttonSmall,
 });

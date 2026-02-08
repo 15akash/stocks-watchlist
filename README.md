@@ -32,7 +32,7 @@ Then press `i` for iOS simulator, `a` for Android emulator, or scan the QR code 
 
 ## API Key Configuration
 
-The FMP API key is loaded from the `FMP_API_KEY` environment variable via `app.config.ts` into `expo-constants`. This keeps the key out of source code. The app reads it at runtime through `Constants.expoConfig.extra.fmpApiKey`.
+The FMP API key is loaded from the `FMP_API_KEY` environment variable via `app.config.ts` into `expo-constants`. The app reads it at runtime through `Constants.expoConfig.extra.fmpApiKey`.
 
 ## Architecture
 
@@ -46,6 +46,7 @@ src/
   screens/        # SearchScreen, WatchlistScreen, StockDetailScreen
   components/     # Reusable UI components (StockCard, ErrorRetry)
   navigation/     # Tab + Stack navigation with typed params
+  theme/          # Centralized colors and typography tokens
 ```
 
 ### Key Decisions
@@ -55,7 +56,9 @@ src/
 | **Data fetching** | TanStack React Query | Built-in caching, retry with exponential backoff, stale-while-revalidate, request cancellation. Cleanly separates server cache from UI state. |
 | **Persistence** | AsyncStorage | Simple key-value store that persists across restarts. Suitable for a flat list of watchlist symbols. |
 | **Navigation** | React Navigation (bottom tabs + native stack) | Standard React Native navigation with type-safe param lists. |
-| **API layer** | Custom fetch client | Lightweight, no extra dependency. Includes timeout (10s), error normalization, and FMP error message extraction. |
+| **API layer** | Custom fetch client | Lightweight, no extra dependency. Includes timeout (10s), error normalization, and FMP error message extraction. Uses `/stable/profile` (free-tier compatible) with parallel fetches for batch quotes. |
+| **Search** | Dual endpoint (symbol + name) | Searches both `/stable/search-symbol` and `/stable/search-name` in parallel, merges and deduplicates, so users can find stocks by either ticker or company name. |
+| **Theme** | Centralized colors + typography | All colors in `theme/colors.ts`, all text styles in `theme/typography.ts`. No hardcoded hex values in components. |
 | **Separation of concerns** | api/ -> domain/ -> hooks/ -> screens/ | Raw API types stay in `api/`, domain mappers transform them, hooks manage state, screens are pure UI. |
 | **Offline-first** | React Query gcTime + stale labels | Cached quotes remain usable when offline. Stale data is clearly labeled. Watchlist persists locally regardless of network. |
 
@@ -72,9 +75,9 @@ src/
 npm test
 ```
 
-**Test suite summary (20 tests):**
+**Test suite summary (21 tests):**
 
-- `mappers.test.ts` - Unit tests for API-to-domain mapping (null safety, field defaults, array handling)
+- `mappers.test.ts` - Unit tests for API-to-domain mapping (null safety, field defaults, range parsing, array handling)
 - `watchlistStorage.test.ts` - Unit tests for AsyncStorage persistence (CRUD, duplicate prevention, corrupt data recovery)
 - `SearchScreen.test.tsx` - Integration test: renders screen with mocked API, verifies initial state -> loading -> results/error -> retry flow
 
@@ -101,9 +104,43 @@ npm test
 - Testing setup + writing tests: 1 hour
 - Type safety, cleanup, README: 30 min
 
-## Known Limitations
+## Known Limitations / TODOs
 
-- No chart visualization on the Stock Detail screen (placeholder only).
+- No chart visualization on the Stock Detail screen.
 - No explicit offline detection banner (relies on React Query cache + stale labels).
 - FMP free tier has rate limits; heavy usage may hit 429 errors.
-- Search filters (Trending, Tech, etc.) are visual placeholders from the wireframe and not yet functional.
+- FMP free tier does not provide `/stable/quote` or `/stable/batch-quote`; the app uses `/stable/profile` instead (fetches individually in parallel for batch operations).
+- Some profile fields (P/E, EPS, day high/low, open, previous close) are not available on the free-tier profile endpoint.
+- No swipe-to-delete on watchlist items (currently uses alert confirmation from detail screen).
+- No push notifications for price alerts.
+- No user authentication or cloud sync — watchlist is device-local only.
+
+## App Store Deployment Strategy
+
+### Pre-Submission
+1. **App icons & splash screen**: Replace placeholder assets in `assets/` with production artwork (1024x1024 icon, adaptive icon for Android).
+2. **Bundle identifier**: Set unique `ios.bundleIdentifier` and `android.package` in `app.config.ts`.
+3. **Version management**: Bump `version` and platform-specific `buildNumber`/`versionCode` for each release.
+4. **Environment**: Move API key to a production-grade secret manager (e.g., EAS Secrets) rather than a local `.env` file.
+
+### Build & Distribution
+- Use **EAS Build** (`eas build`) for both iOS and Android production builds.
+- Configure **EAS Submit** (`eas submit`) for automated App Store Connect and Google Play Console uploads.
+- Set up a CI pipeline (GitHub Actions) to run `npm test` + `npx tsc --noEmit` on every PR, and trigger EAS builds on `main` merges.
+
+### iOS (App Store)
+- Enroll in the Apple Developer Program ($99/year).
+- Configure provisioning profiles and signing certificates via EAS (managed credentials).
+- Submit via App Store Connect with required metadata: screenshots (6.7", 6.5", 5.5"), description, privacy policy URL, and app category (Finance).
+- Expect 1-2 days for App Review.
+
+### Android (Google Play)
+- Enroll in Google Play Developer account ($25 one-time).
+- EAS generates a signed AAB for upload.
+- Submit via Google Play Console with store listing, screenshots, and content rating questionnaire.
+- Use a staged rollout (e.g., 20% -> 100%) for the initial release.
+
+### Post-Launch
+- Use **EAS Update** for OTA JavaScript updates (bug fixes, UI changes) without going through app review.
+- Monitor crash reports via Sentry or Expo's built-in error reporting.
+- Track API usage and consider upgrading to a paid FMP tier if the user base grows.

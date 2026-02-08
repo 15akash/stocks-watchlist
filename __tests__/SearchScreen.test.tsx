@@ -1,20 +1,14 @@
-/**
- * Integration test: SearchScreen
- * Tests that the screen renders correctly with mocked network responses.
- * Verifies: initial state, loading → data, loading → error → retry.
- */
 import React from 'react';
 import { create, act, ReactTestRenderer, ReactTestInstance } from 'react-test-renderer';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SearchScreen } from '../src/screens/SearchScreen';
 import { fmpClient } from '../src/api/fmpClient';
 
-// Mock the API client module
 jest.mock('../src/api/fmpClient', () => ({
   fmpClient: {
     searchSymbol: jest.fn(),
-    getQuote: jest.fn(),
-    getBatchQuotes: jest.fn().mockResolvedValue([]),
+    getProfile: jest.fn(),
+    getBatchProfiles: jest.fn().mockResolvedValue([]),
   },
 }));
 
@@ -54,7 +48,6 @@ function findAllWithText(root: ReactTestInstance, text: string): ReactTestInstan
   });
 }
 
-/** Wait for a condition to become true, polling every interval ms */
 async function waitFor(
   fn: () => boolean,
   { timeout = 3000, interval = 50 }: { timeout?: number; interval?: number } = {},
@@ -88,19 +81,17 @@ describe('SearchScreen Integration', () => {
 
   it('displays search results after debounced query', async () => {
     mockSearchSymbol.mockResolvedValue([
-      { symbol: 'AAPL', name: 'Apple Inc.', currency: 'USD', exchangeShortName: 'NASDAQ' },
+      { symbol: 'AAPL', name: 'Apple Inc.', currency: 'USD', exchange: 'NASDAQ' },
     ]);
 
     const renderer = renderWithProviders(React.createElement(SearchScreen));
     const root = renderer.root;
     const textInput = findAllByType(root, 'TextInput')[0];
 
-    // Simulate typing
     await act(async () => {
       textInput.props.onChangeText('AAPL');
     });
 
-    // Wait for debounce + query to resolve
     await waitFor(() => findAllWithText(root, 'Apple Inc.').length > 0);
 
     expect(mockSearchSymbol).toHaveBeenCalled();
@@ -119,7 +110,6 @@ describe('SearchScreen Integration', () => {
       textInput.props.onChangeText('FAIL');
     });
 
-    // Wait for debounce + error to propagate
     await waitFor(() => findAllWithText(root, 'Failed to search').length > 0);
 
     const errorTexts = findAllWithText(root, 'Failed to search');

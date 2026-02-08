@@ -1,13 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { watchlistStorage } from '../src/storage/watchlistStorage';
 
-// Interface for mock-specific methods added in jest.setup.ts
 interface MockAsyncStorage {
   __resetStore: () => void;
   __getStore: () => Record<string, string>;
 }
 
-// Access mock internals with proper typing
 const mockAsyncStorage = AsyncStorage as unknown as typeof AsyncStorage & MockAsyncStorage;
 
 beforeEach(() => {

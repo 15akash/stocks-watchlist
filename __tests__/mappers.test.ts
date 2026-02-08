@@ -1,5 +1,5 @@
-import { mapSearchResult, mapSearchResults, mapQuote, mapQuotes } from '../src/domain/mappers';
-import type { FMPQuote, FMPSearchResult } from '../src/api/fmpClient';
+import { mapSearchResult, mapSearchResults, mapProfile, mapProfiles } from '../src/domain/mappers';
+import type { FMPProfile, FMPSearchResult } from '../src/api/fmpClient';
 
 describe('mapSearchResult', () => {
   it('maps a valid FMP search result to domain model', () => {
@@ -7,7 +7,7 @@ describe('mapSearchResult', () => {
       symbol: 'AAPL',
       name: 'Apple Inc.',
       currency: 'USD',
-      exchangeShortName: 'NASDAQ',
+      exchange: 'NASDAQ',
     };
 
     const result = mapSearchResult(raw);
@@ -16,7 +16,7 @@ describe('mapSearchResult', () => {
       symbol: 'AAPL',
       name: 'Apple Inc.',
       currency: 'USD',
-      exchangeShortName: 'NASDAQ',
+      exchange: 'NASDAQ',
     });
   });
 
@@ -27,15 +27,15 @@ describe('mapSearchResult', () => {
     expect(result.symbol).toBe('');
     expect(result.name).toBe('');
     expect(result.currency).toBe('USD');
-    expect(result.exchangeShortName).toBe('');
+    expect(result.exchange).toBe('');
   });
 });
 
 describe('mapSearchResults', () => {
   it('maps an array of search results', () => {
     const raw: FMPSearchResult[] = [
-      { symbol: 'AAPL', name: 'Apple', currency: 'USD', exchangeShortName: 'NASDAQ' },
-      { symbol: 'TSLA', name: 'Tesla', currency: 'USD', exchangeShortName: 'NASDAQ' },
+      { symbol: 'AAPL', name: 'Apple', currency: 'USD', exchange: 'NASDAQ' },
+      { symbol: 'TSLA', name: 'Tesla', currency: 'USD', exchange: 'NASDAQ' },
     ];
 
     const results = mapSearchResults(raw);
@@ -45,56 +45,64 @@ describe('mapSearchResults', () => {
   });
 
   it('returns empty array for non-array input', () => {
-    // Deliberately passing invalid types to test defensive handling
     expect(mapSearchResults(null as unknown as FMPSearchResult[])).toEqual([]);
     expect(mapSearchResults(undefined as unknown as FMPSearchResult[])).toEqual([]);
   });
 });
 
-describe('mapQuote', () => {
-  it('maps a full FMP quote to domain model', () => {
-    const raw: FMPQuote = {
+describe('mapProfile', () => {
+  it('maps a full FMP profile to domain model', () => {
+    const raw: FMPProfile = {
       symbol: 'AAPL',
-      name: 'Apple Inc.',
+      companyName: 'Apple Inc.',
       price: 175.43,
       change: 4.21,
-      changesPercentage: 2.31,
-      dayLow: 172.0,
-      dayHigh: 176.5,
-      yearLow: 164.08,
-      yearHigh: 199.62,
-      marketCap: 2710000000000,
+      changePercentage: 2.31,
       volume: 48200000,
-      avgVolume: 52800000,
-      open: 173.5,
-      previousClose: 171.22,
-      pe: 28.42,
-      eps: 6.17,
+      averageVolume: 52800000,
+      marketCap: 2710000000000,
+      range: '164.08-199.62',
       exchange: 'NASDAQ',
-      timestamp: 1704571200,
+      beta: 1.29,
+      industry: 'Consumer Electronics',
+      sector: 'Technology',
     };
 
-    const result = mapQuote(raw);
+    const result = mapProfile(raw);
 
     expect(result.symbol).toBe('AAPL');
+    expect(result.name).toBe('Apple Inc.');
     expect(result.price).toBe(175.43);
     expect(result.change).toBe(4.21);
-    expect(result.pe).toBe(28.42);
+    expect(result.changesPercentage).toBe(2.31);
+    expect(result.yearLow).toBe(164.08);
     expect(result.yearHigh).toBe(199.62);
+    expect(result.volume).toBe(48200000);
+    expect(result.avgVolume).toBe(52800000);
   });
 
-  it('handles missing pe/eps as null', () => {
-    const raw = { symbol: 'TEST' } as FMPQuote;
-    const result = mapQuote(raw);
+  it('handles missing fields with defaults', () => {
+    const raw = {} as FMPProfile;
+    const result = mapProfile(raw);
 
-    expect(result.pe).toBeNull();
-    expect(result.eps).toBeNull();
+    expect(result.symbol).toBe('');
+    expect(result.name).toBe('');
+    expect(result.price).toBe(0);
+    expect(result.yearLow).toBe(0);
+    expect(result.yearHigh).toBe(0);
+  });
+
+  it('parses range string into yearLow and yearHigh', () => {
+    const raw = { range: '96.43-160.27' } as FMPProfile;
+    const result = mapProfile(raw);
+
+    expect(result.yearLow).toBe(96.43);
+    expect(result.yearHigh).toBe(160.27);
   });
 });
 
-describe('mapQuotes', () => {
+describe('mapProfiles', () => {
   it('returns empty array for non-array input', () => {
-    // Deliberately passing invalid type to test defensive handling
-    expect(mapQuotes(null as unknown as FMPQuote[])).toEqual([]);
+    expect(mapProfiles(null as unknown as FMPProfile[])).toEqual([]);
   });
 });

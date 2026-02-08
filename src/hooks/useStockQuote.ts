@@ -1,15 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { fmpClient } from '../api/fmpClient';
-import { mapQuote } from '../domain/mappers';
+import { mapProfile } from '../domain/mappers';
 import type { StockQuote } from '../models/types';
 
 export function useStockQuote(symbol: string) {
   return useQuery<StockQuote | null>({
     queryKey: ['quote', symbol],
     queryFn: async () => {
-      const raw = await fmpClient.getQuote(symbol);
+      const raw = await fmpClient.getProfile(symbol);
       if (!raw || raw.length === 0) return null;
-      return mapQuote(raw[0]);
+      return mapProfile(raw[0]);
     },
     enabled: !!symbol,
     staleTime: 30_000,

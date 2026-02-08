@@ -13,6 +13,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { StockCard } from '../components/StockCard';
 import { ErrorRetry } from '../components/ErrorRetry';
+import { colors } from '../theme/colors';
+import { typography } from '../theme/typography';
 import type { WatchlistItem } from '../models/types';
 import type { RootStackParamList } from '../navigation/types';
 
@@ -88,7 +90,7 @@ export function WatchlistScreen() {
 
       {isLoading && items.length > 0 && (
         <View style={styles.loadingBar}>
-          <ActivityIndicator size="small" color="#171717" />
+          <ActivityIndicator size="small" color={colors.textPrimary} />
           <Text style={styles.loadingText}>Loading quotes...</Text>
         </View>
       )}
@@ -106,7 +108,7 @@ export function WatchlistScreen() {
         renderItem={renderItem}
         contentContainerStyle={styles.list}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={refresh} tintColor="#171717" />
+          <RefreshControl refreshing={isRefreshing} onRefresh={refresh} tintColor={colors.textPrimary} />
         }
       />
     </View>
@@ -114,7 +116,7 @@ export function WatchlistScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: colors.white },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -123,11 +125,11 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 4,
   },
-  title: { fontSize: 22, fontWeight: '700', color: '#171717' },
-  count: { fontSize: 14, color: '#737373' },
+  title: typography.headingLarge,
+  count: { ...typography.bodySmall, color: colors.textMuted },
   lastUpdated: {
-    fontSize: 12,
-    color: '#a3a3a3',
+    ...typography.label,
+    color: colors.textPlaceholder,
     paddingHorizontal: 16,
     paddingBottom: 8,
   },
@@ -138,9 +140,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     gap: 8,
   },
-  loadingText: { fontSize: 13, color: '#737373' },
+  loadingText: typography.caption,
   list: { paddingHorizontal: 16, paddingBottom: 20 },
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
-  emptyTitle: { fontSize: 17, color: '#171717', fontWeight: '600', marginBottom: 8 },
-  emptySubtitle: { fontSize: 14, color: '#a3a3a3', textAlign: 'center' },
+  emptyTitle: { ...typography.headingSmall, marginBottom: 8 },
+  emptySubtitle: { ...typography.subtitle, textAlign: 'center' },
 });

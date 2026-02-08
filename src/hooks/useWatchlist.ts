@@ -1,29 +1,32 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { watchlistStorage } from '../storage/watchlistStorage';
 import { fmpClient } from '../api/fmpClient';
-import { mapQuotes } from '../domain/mappers';
+import { mapProfiles } from '../domain/mappers';
 import type { WatchlistItem, StockQuote } from '../models/types';
 
+const WATCHLIST_KEY = ['watchlistItems'] as const;
+
 export function useWatchlist() {
-  const [items, setItems] = useState<WatchlistItem[]>([]);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const queryClient = useQueryClient();
 
-  // Load watchlist from storage on mount
-  useEffect(() => {
-    watchlistStorage.getAll().then(setItems);
-  }, []);
+  // Shared watchlist items via React Query cache
+  const itemsQuery = useQuery<WatchlistItem[]>({
+    queryKey: WATCHLIST_KEY,
+    queryFn: () => watchlistStorage.getAll(),
+    staleTime: Infinity,
+  });
 
+  const items = itemsQuery.data ?? [];
   const symbols = items.map((i) => i.symbol);
 
-  // Fetch batch quotes for all watchlist symbols
+  // Fetch profiles for all watchlist symbols
   const quotesQuery = useQuery<StockQuote[]>({
     queryKey: ['batchQuotes', symbols.join(',')],
     queryFn: async () => {
       if (symbols.length === 0) return [];
-      const raw = await fmpClient.getBatchQuotes(symbols);
-      return mapQuotes(raw);
+      const raw = await fmpClient.getBatchProfiles(symbols);
+      return mapProfiles(raw);
     },
     enabled: symbols.length > 0,
     staleTime: 30_000,
@@ -31,18 +34,10 @@ export function useWatchlist() {
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10_000),
   });
 
-  // Update lastUpdated on successful fetch
-  useEffect(() => {
-    if (quotesQuery.isSuccess) {
-      setLastUpdated(new Date());
-    }
-  }, [quotesQuery.isSuccess, quotesQuery.dataUpdatedAt]);
-
   const addToWatchlist = useCallback(
     async (symbol: string, name: string) => {
       const updated = await watchlistStorage.addItem(symbol, name);
-      setItems(updated);
-      // Invalidate batch quotes so they refresh
+      queryClient.setQueryData(WATCHLIST_KEY, updated);
       queryClient.invalidateQueries({ queryKey: ['batchQuotes'] });
     },
     [queryClient],
@@ -51,7 +46,7 @@ export function useWatchlist() {
   const removeFromWatchlist = useCallback(
     async (symbol: string) => {
       const updated = await watchlistStorage.removeItem(symbol);
-      setItems(updated);
+      queryClient.setQueryData(WATCHLIST_KEY, updated);
       queryClient.invalidateQueries({ queryKey: ['batchQuotes'] });
     },
     [queryClient],
@@ -66,7 +61,6 @@ export function useWatchlist() {
     return quotesQuery.refetch();
   }, [quotesQuery]);
 
-  // Build a map: symbol -> quote for easy lookup
   const quotesMap: Record<string, StockQuote> = {};
   (quotesQuery.data ?? []).forEach((q) => {
     quotesMap[q.symbol] = q;
@@ -79,7 +73,7 @@ export function useWatchlist() {
     isRefreshing: quotesQuery.isFetching && !quotesQuery.isLoading,
     isError: quotesQuery.isError,
     error: quotesQuery.error,
-    lastUpdated,
+    lastUpdated: quotesQuery.dataUpdatedAt ? new Date(quotesQuery.dataUpdatedAt) : null,
     addToWatchlist,
     removeFromWatchlist,
     isInWatchlist,

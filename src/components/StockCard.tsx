@@ -1,5 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { colors } from '../theme/colors';
+import { typography } from '../theme/typography';
 
 interface Props {
   symbol: string;
@@ -54,9 +56,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
     borderWidth: 1,
-    borderColor: '#e5e5e5',
+    borderColor: colors.border,
     borderRadius: 12,
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
     marginBottom: 10,
   },
   left: { flexDirection: 'row', alignItems: 'center', flex: 1 },
@@ -64,26 +66,20 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#525252',
+    backgroundColor: colors.textSecondary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
-  avatarText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  avatarText: typography.badge,
   info: { flex: 1 },
-  name: { fontSize: 15, color: '#171717', fontWeight: '500' },
-  symbol: { fontSize: 13, color: '#737373', marginTop: 2 },
+  name: typography.bodyMedium,
+  symbol: { ...typography.caption, marginTop: 2 },
   right: { alignItems: 'flex-end', marginLeft: 12 },
-  price: { fontSize: 15, color: '#171717', fontWeight: '500' },
-  change: { fontSize: 13, marginTop: 2 },
-  positive: { color: '#16a34a' },
-  negative: { color: '#dc2626' },
-  noData: { fontSize: 15, color: '#a3a3a3' },
-  staleLabel: {
-    fontSize: 10,
-    color: '#f59e0b',
-    marginTop: 2,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-  },
+  price: typography.bodyMedium,
+  change: { ...typography.caption, marginTop: 2 },
+  positive: { color: colors.positive },
+  negative: { color: colors.negative },
+  noData: { ...typography.body, color: colors.textPlaceholder },
+  staleLabel: { ...typography.stale, marginTop: 2 },
 });

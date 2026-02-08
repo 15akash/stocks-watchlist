@@ -3,10 +3,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { fmpClient } from '../api/fmpClient';
 import { mapSearchResults } from '../domain/mappers';
 
-/**
- * Debounced stock search with in-flight request cancellation.
- * Debounce: 400ms. Returns mapped SearchResult[].
- */
 export function useSearchStocks() {
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
